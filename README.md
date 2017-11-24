@@ -7,9 +7,15 @@ Icinga / Nagios Plugin for checking Entitlement of an paytv subscription on a ru
   - select subscription
 
 ### Version
-1.1
+1.2
 
 ### Release notes
+1.2
+Forked from <https://github.com/DazClimax>
+* Added support for SSL and non-standard port
+* removed requirement for Scalar::MoreUtils, because it is not available as a debian package
+
+1.1
 Small bugfix wrong character for id parameter, function help print s instead of i.
 Reduce date function and add version to script.
 
@@ -18,7 +24,7 @@ Reduce date function and add version to script.
 Copy to your plugin folder
 
 ```sh
-$ git clone https://github.com/DazClimax/check_oscam.git
+$ git clone https://github.com/tobox/check_oscam.git
 ```
 
 ### Define plugin in icinga
@@ -31,6 +37,8 @@ object CheckCommand "COMANDNAME" {
 
            arguments = {
                    "-H" = "$oscam_hostname$"
+                   "-P" = "$oscam_webif_port$"
+                   "-s" = "$oscam_webif_use_ssl$"
                    "-u" = "$oscam_user$"
                    "-p" = "$oscam_password$"
                    "-r" = "$oscam_reader$"
@@ -53,6 +61,8 @@ object Service "Entitlement NAME" {
          vars.sla = "24x7"
  
           vars += {
+         oscam_webif_port = "8888"
+         oscam_webif_use_ssl = "0"
          oscam_user = "USERNAME"
          oscam_password = "PASSWORD"
          oscam_reader = "READERNAME"
@@ -65,6 +75,6 @@ License
 ----
 
 GPLv3
-
+   [tobox]: <https://github.com/tobox>
    [DazClimax]: <https://github.com/DazClimax>
    [git-repo-url]: <https://github.com/DazClimax/check_oscam.git>

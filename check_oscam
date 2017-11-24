@@ -6,15 +6,17 @@ use Time::Local;
 use Date::Manip;
 use Math::Round;
 use Getopt::Long;
-use Scalar::MoreUtils qw(empty);
+# use Scalar::MoreUtils qw(empty);
 
 #Define variabels
-our $PROGRAMVERSION = "1.1";
+our $PROGRAMVERSION = "1.2";
 our $hostname = "";
 our $user = "";
 our $password ="";
+our $port = 8888;
 our $reader = "";
 our $subscription = "";
+our $ssl = "0";
 our $help = "";
 our $version = "";
 our $warningtime = 14; #days
@@ -26,10 +28,12 @@ GetOptions(
          "H=s"  => \$hostname,          "hostname"      => \$hostname,
          "u=s"  => \$user,              "user"          => \$user,
          "p=s"  => \$password,          "password"      => \$password,
+         "P=i"  => \$port,              "port"          => \$port,
          "r=s"  => \$reader,            "reader"        => \$reader,
          "i=s"  => \$subscription,      "subscription"  => \$subscription,
          "w=i"  => \$warningtime,       "warningtime"   => \$warningtime,
          "c=i"  => \$criticaltime,      "criticaltime"  => \$criticaltime,
+         "s"    => \$ssl,               "ssl"           => \$ssl,
          "v"    => \$version,           "version"       => \$version,
          "h"    => \$help,              "help"          => \$help);
 
@@ -40,7 +44,7 @@ if ($hostname and $user and $password and $reader and $subscription) {
 } elsif ($version) {
   print_version();
   exit;
-} elsif ($help or empty($help)) {
+} else {
   print_help();
 }
 
@@ -56,11 +60,15 @@ sub print_help{
   print "Program: check_oscam version ".$PROGRAMVERSION."\n";
   print "\n";
   print "Usage:\n";
-  print "  check_oscam -H <IP> -u <user> -p <password> -r <reader -i <id> [-w <days>] [-c <days>]\n";
+  print "  check_oscam -H <IP> [-P <webif_port>] [-s <use_ssl>] <-u <user> -p <password> -r <reader> -i <id> [-w <days>] [-c <days>]\n";
   print "  check_oscam [-h | --help]\n";
   print "  check_oscam [-v | --version]\n";
   print "\n";
-  print "  Warning and critical values are optional, default warning is 14 days and default critial is 1 day all other values are needed\n";
+  print "  Optional are:\n";
+  print "  -P <webif_port> - default 8888\n";
+  print "  -s <use_ssl> - default is no ssl (0), use 1 for ssl\n";
+  print "  -w <days> - warning time, default is 14 days\n";
+  print "  -c <dayl> - critial time, default is 1 day\n";
   print "\n";
   exit 0;
 }
@@ -105,11 +113,11 @@ sub get_diff{
 
 # Get Entitlmentdate from oscam
 sub get_entitlementdate{
-  my ($url, $entitlementdate);
-
-  $url = "curl --digest -s -u ".$user.":".$password." http://".$hostname."/entitlements.html?label=".$reader. " | grep tier | awk -F\"<TD>\" {'print \$5,\$8'} |  grep \".$subscription.\" | awk -F\"</TD>\" {'print \$2'}";
+  my ($url, $entitlementdate, $use_ssl);
+  $use_ssl = "";
+  if ($ssl > 0) { $use_ssl = "s"; };
+  $url = "curl -k --digest -s -u ".$user.":".$password." http".$use_ssl."://".$hostname.":".$port."/entitlements.html?label=".$reader. " | grep tier | awk -F\"<TD>\" {'print \$5,\$8'} |  grep \".$subscription.\" | awk -F\"</TD>\" {'print \$2'}";
   $entitlementdate = `$url`;
-
   return $entitlementdate;
 }
 
